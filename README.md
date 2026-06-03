@@ -146,6 +146,8 @@ pixel-beads-generator/
 - ✅ 可调导出参数
 - ✅ 缩放滑块
 
+> 如果你发现了 bug 或者有改进建议，欢迎提 Issue 或 PR，我会及时处理。
+
 ## 📄 许可证
 
 [MIT License](LICENSE)
