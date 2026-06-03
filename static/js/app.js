@@ -307,6 +307,65 @@ function buildEditPanel() {
         paintColor = currentData.color_stats[0].code;
         bar.firstChild.classList.add('active');
     }
+
+    // 添加"其他颜色"选择器
+    const otherWrap = document.createElement('div');
+    otherWrap.className = 'color-pick-other';
+    otherWrap.innerHTML = `
+        <select id="otherColorSelect"><option value="">+ 其他颜色</option></select>
+    `;
+    bar.appendChild(otherWrap);
+
+    const otherSelect = otherWrap.querySelector('#otherColorSelect');
+
+    // 如果还没加载过完整色卡，加载一次
+    if (!window._fullColorCard) {
+        fetch('/api/color_card/mard')
+            .then(r => r.json())
+            .then(card => {
+                window._fullColorCard = card.colors;
+                fillOtherColorSelect(otherSelect, card.colors);
+            });
+    } else {
+        fillOtherColorSelect(otherSelect, window._fullColorCard);
+    }
+
+    otherSelect.addEventListener('change', () => {
+        const code = otherSelect.value;
+        if (!code) return;
+        const found = window._fullColorCard.find(c => c.code === code);
+        if (found) {
+            paintColor = found.code;
+            // 取消其他选中状态
+            bar.querySelectorAll('.color-pick-item').forEach(el => el.classList.remove('active'));
+            // 加到画笔栏里（如果还没有）
+            if (!bar.querySelector(`[data-code="${code}"]`)) {
+                const item = document.createElement('div');
+                item.className = 'color-pick-item active';
+                item.style.background = `rgb(${found.rgb[0]},${found.rgb[1]},${found.rgb[2]})`;
+                item.title = found.code;
+                item.dataset.code = code;
+                item.addEventListener('click', () => {
+                    paintColor = code;
+                    bar.querySelectorAll('.color-pick-item').forEach(el => el.classList.remove('active'));
+                    item.classList.add('active');
+                });
+                bar.insertBefore(item, otherWrap);
+            } else {
+                bar.querySelector(`[data-code="${code}"]`).classList.add('active');
+            }
+            otherSelect.value = '';
+        }
+    });
+}
+
+function fillOtherColorSelect(select, colors) {
+    colors.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.code;
+        opt.textContent = `${c.code} ${c.name || ''}`;
+        select.appendChild(opt);
+    });
 }
 
 // ========== 批量替换颜色 ==========
