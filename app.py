@@ -8,18 +8,21 @@ import os
 import json
 import uuid
 import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image
 from flask import Flask, request, jsonify, render_template
 
-app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__,
+            static_folder=os.path.join(BASE_DIR, 'static'),
+            template_folder=os.path.join(BASE_DIR, 'templates'))
+app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 
 def load_color_card(brand='mard'):
-    path = os.path.join(os.path.dirname(__file__), 'static', 'data', 'color_cards', f'{brand}.json')
+    path = os.path.join(BASE_DIR, 'static', 'data', 'color_cards', f'{brand}.json')
     with open(path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
@@ -249,7 +252,7 @@ def index():
 
 @app.route('/api/color_cards', methods=['GET'])
 def get_color_cards():
-    color_cards_dir = os.path.join(os.path.dirname(__file__), 'static', 'data', 'color_cards')
+    color_cards_dir = os.path.join(BASE_DIR, 'static', 'data', 'color_cards')
     brands = [f.replace('.json', '') for f in os.listdir(color_cards_dir) if f.endswith('.json')]
     return jsonify({'brands': brands})
 
