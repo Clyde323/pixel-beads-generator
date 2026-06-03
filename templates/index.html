@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拼豆图纸生成器</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- 侧边控制面板 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>🧩 拼豆图纸生成器</h1>
+                <p>MARD 色卡 · 289色</p>
+            </div>
+
+            <!-- 上传区 -->
+            <div class="panel-section">
+                <h3>📷 上传图片</h3>
+                <div class="upload-area" id="uploadArea">
+                    <div id="uploadPlaceholder">
+                        <div class="upload-icon">📁</div>
+                        <p>点击或拖拽上传</p>
+                        <span>JPG / PNG / BMP</span>
+                    </div>
+                    <div id="uploadPreview" style="display:none;">
+                        <img id="previewImg" src="" alt="预览">
+                        <button class="btn-reupload" id="reuploadBtn">✕ 重新选择</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 板子设置 -->
+            <div class="panel-section">
+                <h3>📐 板子设置</h3>
+                <div class="form-row">
+                    <label>板子数量</label>
+                    <div class="input-group">
+                        <button class="btn-adj" onclick="adjustBoardCount(-1)">−</button>
+                        <input type="number" id="boardCount" value="1" min="1" max="100">
+                        <button class="btn-adj" onclick="adjustBoardCount(1)">+</button>
+                        <span class="unit">块</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>单块板子规格</label>
+                    <div class="input-group">
+                        <input type="number" id="boardWidth" value="29" min="1" max="150">
+                        <span class="sep">×</span>
+                        <input type="number" id="boardHeight" value="29" min="1" max="150">
+                        <span class="unit">格</span>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>总格数</label>
+                    <div class="total-info" id="totalInfo">1 块 × 29 × 29 = <strong>841 颗</strong></div>
+                </div>
+            </div>
+
+            <!-- 精密程度 -->
+            <div class="panel-section">
+                <h3>🔍 精密程度</h3>
+                <div class="slider-container">
+                    <input type="range" id="precision" min="10" max="500" value="29">
+                    <div class="slider-labels">
+                        <span>粗糙</span>
+                        <span id="precisionValue">29 × 29</span>
+                        <span>精密</span>
+                    </div>
+                </div>
+                <div class="preset-btns">
+                    <button class="btn-preset" onclick="setPrecision(29)">1块</button>
+                    <button class="btn-preset" onclick="setPrecision(58)">4块</button>
+                    <button class="btn-preset" onclick="setPrecision(87)">9块</button>
+                    <button class="btn-preset" onclick="setPrecision(145)">25块</button>
+                </div>
+            </div>
+
+            <!-- 颜色优化 -->
+            <div class="panel-section">
+                <h3>🎨 颜色优化</h3>
+                <div class="form-row">
+                    <label>颜色容差 <span class="hint">ΔE* 合并相近色</span></label>
+                    <div class="slider-container">
+                        <input type="range" id="tolerance" min="0" max="50" value="2">
+                        <div class="slider-labels">
+                            <span>精确</span>
+                            <span id="toleranceValue">2</span>
+                            <span>粗略</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>最大颜色数</label>
+                    <select id="maxColors">
+                        <option value="">不限制</option>
+                        <option value="5">5种</option>
+                        <option value="10">10种</option>
+                        <option value="15">15种</option>
+                        <option value="20">20种</option>
+                        <option value="30">30种</option>
+                        <option value="40">40种</option>
+                        <option value="50">50种</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 生成按钮 -->
+            <button class="btn-generate" id="generateBtn" disabled>
+                ⚡ 生成拼豆图纸
+            </button>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 欢迎页 -->
+            <div class="welcome" id="welcome">
+                <div class="welcome-icon">🧩</div>
+                <h2>上传图片开始生成</h2>
+                <p>支持 JPG、PNG、BMP、GIF 格式</p>
+            </div>
+
+            <!-- 加载动画 -->
+            <div class="loading" id="loading" style="display:none;">
+                <div class="spinner"></div>
+                <p>正在生成图纸...</p>
+            </div>
+
+            <!-- 结果区 -->
+            <div class="result" id="result" style="display:none;">
+                <!-- 工具栏 -->
+                <div class="toolbar">
+                    <div class="toolbar-info">
+                        <span class="badge" id="infoSize"></span>
+                        <span class="badge" id="infoBeads"></span>
+                        <span class="badge" id="infoColors"></span>
+                    </div>
+                    <div class="toolbar-actions">
+                        <label class="toggle"><input type="checkbox" id="showGrid" checked> 网格</label>
+                        <label class="toggle"><input type="checkbox" id="showCode" checked> 色号</label>
+                        <label class="toggle"><input type="checkbox" id="showBg" checked> 底色</label>
+                        <label class="toggle"><input type="checkbox" id="editMode"> ✏️ 编辑</label>
+                        <div class="zoom-slider-bar">
+                            <span class="zoom-label">🔍</span>
+                            <input type="range" id="zoomSlider" min="25" max="500" value="100" step="5">
+                            <span id="zoomLevel">100%</span>
+                        </div>
+                        <button class="btn-export" id="exportBtn">📥 导出</button>
+                    </div>
+                </div>
+
+                <!-- 手动编辑面板（默认隐藏） -->
+                <div class="edit-panel" id="editPanel" style="display:none;">
+                    <div class="edit-row">
+                        <span class="edit-label">🖊️ 画笔色号：</span>
+                        <div class="color-pick-bar" id="paintColorBar"></div>
+                        <span class="edit-hint">点击选择色号，再点击格子修改</span>
+                    </div>
+                    <div class="edit-row">
+                        <span class="edit-label">🔄 批量替换：</span>
+                        <select id="replaceFrom"><option value="">原色</option></select>
+                        <span class="sep">→</span>
+                        <select id="replaceTo"><option value="">目标色</option></select>
+                        <button class="btn-small" id="replaceBtn">替换全部</button>
+                    </div>
+                </div>
+
+                <!-- 导出设置弹窗 -->
+                <div class="export-dialog" id="exportDialog" style="display:none;">
+                    <div class="export-content">
+                        <h3>📥 导出设置</h3>
+                        <div class="export-row">
+                            <label>单元格大小（像素）</label>
+                            <select id="exportCellSize">
+                                <option value="10">10px（小图）</option>
+                                <option value="20">20px</option>
+                                <option value="30" selected>30px（推荐）</option>
+                                <option value="40">40px</option>
+                                <option value="50">50px（高清）</option>
+                            </select>
+                        </div>
+                        <div class="export-row">
+                            <label>色号字体大小</label>
+                            <select id="exportFontSize">
+                                <option value="6">6px</option>
+                                <option value="8">8px</option>
+                                <option value="10" selected>10px（推荐）</option>
+                                <option value="12">12px</option>
+                                <option value="14">14px</option>
+                            </select>
+                        </div>
+                        <div class="export-row">
+                            <label>包含内容</label>
+                            <div class="export-checks">
+                                <label><input type="checkbox" id="exportBg" checked> 底色</label>
+                                <label><input type="checkbox" id="exportGrid" checked> 网格线</label>
+                                <label><input type="checkbox" id="exportCode" checked> 色号</label>
+                                <label><input type="checkbox" id="exportStats" checked> 颜色统计</label>
+                            </div>
+                        </div>
+                        <div class="export-preview" id="exportPreview"></div>
+                        <div class="export-actions">
+                            <button class="btn-export-confirm" id="exportConfirm">📥 确认导出</button>
+                            <button class="btn-export-cancel" id="exportCancel">取消</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图纸容器 -->
+                <div class="canvas-wrapper" id="canvasWrapper">
+                    <canvas id="gridCanvas"></canvas>
+                </div>
+
+                <!-- 颜色统计 -->
+                <div class="color-stats" id="colorStats">
+                    <h3>📊 颜色用量统计</h3>
+                    <div class="stats-table" id="statsTable"></div>
+                    <div class="stats-total" id="statsTotal"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

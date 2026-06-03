@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.egg
+
+# 虚拟环境
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 上传的临时图片
+uploads/*
+!uploads/.gitkeep
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.tmp
+
+# 示例图片（可选，如需保留可删除此行）
+示例.jpg
