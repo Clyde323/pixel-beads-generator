@@ -443,10 +443,14 @@ function handleCanvasClick(e) {
                 const gridRow = br * bh + row;
 
                 if (gridRow < currentData.height && gridCol < currentData.width) {
-                    // 找到目标色信息
+                    // 找到目标色信息（先查当前统计，再查完整色卡）
                     let toColor = null;
                     for (const stat of currentData.color_stats) {
                         if (stat.code === paintColor) { toColor = stat; break; }
+                    }
+                    if (!toColor && window._fullColorCard) {
+                        const found = window._fullColorCard.find(c => c.code === paintColor);
+                        if (found) toColor = { code: found.code, name: found.name, rgb: found.rgb };
                     }
                     if (!toColor) return;
 

@@ -26,5 +26,7 @@ uploads/*
 Thumbs.db
 *.tmp
 
-# 示例图片（可选，如需保留可删除此行）
-示例.jpg
+# 根目录下的临时图片
+*.png
+*.jpg
+!docs/images/*
