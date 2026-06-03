@@ -14,9 +14,15 @@
 - **滚轮缩放**：鼠标滚轮自由缩放查看
 - **导出 PNG**：一键导出完整图纸图片
 
-## 📸 界面预览
+## 📸 效果展示
 
-> 左侧控制面板 + 右侧图纸预览，实时交互编辑
+### 输入原图 → 生成图纸
+
+| 输入原图 | 生成图纸（58×58，30px/格） |
+|:---:|:---:|
+| ![输入原图](docs/images/input.png) | ![生成图纸](docs/images/output.png) |
+
+> 左侧控制面板 + 右侧图纸预览，支持实时交互编辑
 
 ## 🚀 快速开始
 
@@ -29,8 +35,8 @@
 
 ```bash
 # 克隆项目
-git clone https://github.com/你的用户名/bead-pattern-generator.git
-cd bead-pattern-generator
+git clone https://github.com/Clyde323/pixel-beads-generator.git
+cd pixel-beads-generator
 
 # 安装依赖
 pip install -r requirements.txt
