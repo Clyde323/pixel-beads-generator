@@ -56,6 +56,20 @@
 
 ## 🚀 快速开始
 
+### 方式一：一键启动（推荐）
+
+**Windows 用户：** 双击运行 `start.bat`
+
+**Mac/Linux 用户：**
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+脚本会自动检查依赖、安装缺失库、启动服务并打开浏览器。
+
+### 方式二：手动启动
+
 ```bash
 # 克隆项目
 git clone https://github.com/Clyde323/pixel-beads-generator.git
