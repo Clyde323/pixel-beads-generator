@@ -75,10 +75,10 @@ function bindEvents() {
         $('toleranceValue').textContent = $('tolerance').value;
     });
 
-    // 边缘强化滑块
+    // 轮廓清理滑块
     $('edgeEnhance').addEventListener('input', () => {
         const val = $('edgeEnhance').value;
-        const labels = ['0（关闭）', '1（弱）', '2（中）', '3（强）', '4（很强）', '5（最强）'];
+        const labels = ['0（关闭）', '1（弱清理）', '2（中清理）', '3（强清理+灭灰色带）', '4（很强）', '5（最强）'];
         $('edgeEnhanceValue').textContent = labels[val] || val;
     });
 

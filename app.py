@@ -99,19 +99,24 @@ def edge_enhance_grid(grid, width, height, iterations=2):
     """
     边缘强化：投票清理边缘过渡色孤岛
 
-    原理：遍历每个格子，统计4邻域颜色分布。
-    如果当前颜色在邻居中是少数派（出现<2次），
+    原理：遍历每个格子，统计8邻域颜色分布。
+    如果当前颜色在邻居中是少数派（出现<=2次），
     说明它是过渡色/噪点，替换为邻居中的主体颜色。
     迭代多次可清理多层边缘过渡。
     """
+    # 8邻域方向
+    directions = [(-1, -1), (-1, 0), (-1, 1),
+                  (0, -1),          (0, 1),
+                  (1, -1),  (1, 0),  (1, 1)]
+
     for _ in range(iterations):
         new_grid = [row[:] for row in grid]
         for row in range(height):
             for col in range(width):
                 current = grid[row][col]
-                # 收集4邻域邻居
+                # 收集8邻域邻居
                 neighbors = []
-                for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                for dr, dc in directions:
                     nr, nc = row + dr, col + dc
                     if 0 <= nr < height and 0 <= nc < width:
                         neighbors.append(grid[nr][nc])
@@ -121,7 +126,7 @@ def edge_enhance_grid(grid, width, height, iterations=2):
 
                 # 如果当前颜色在邻居中已占多数，不是过渡色，保留
                 same_count = sum(1 for n in neighbors if n['code'] == current['code'])
-                if same_count >= 2:
+                if same_count >= 3:
                     continue
 
                 # 找到邻居中最常见的颜色，并继承其完整信息
@@ -140,6 +145,89 @@ def edge_enhance_grid(grid, width, height, iterations=2):
         grid = new_grid
 
     return grid
+
+
+def outline_cleanup_grid(grid, width, height, min_area=3):
+    """
+    轮廓清理：基于连通区域大小，消灭细线边缘的过渡色带
+
+    原理：
+    1. 用BFS找出所有同色连通区域
+    2. 面积 < min_area 的区域视为过渡色/抗锯齿杂色
+    3. 把这些小区域整体替换为周围最常见的大区域颜色
+
+    效果：黑线边缘的 H23/R13/M15 灰色细带会被整体抹除，
+          直接变成黑→白硬跳变。
+    """
+    visited = [[False] * width for _ in range(height)]
+    directions_4 = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    directions_8 = [(-1, -1), (-1, 0), (-1, 1),
+                    (0, -1),          (0, 1),
+                    (1, -1),  (1, 0),  (1, 1)]
+
+    # 第一步：找出所有连通区域
+    regions = []
+    for row in range(height):
+        for col in range(width):
+            if visited[row][col]:
+                continue
+            code = grid[row][col]['code']
+            region_cells = []
+            queue = [(row, col)]
+            visited[row][col] = True
+            while queue:
+                r, c = queue.pop(0)
+                region_cells.append((r, c))
+                for dr, dc in directions_4:
+                    nr, nc = r + dr, c + dc
+                    if 0 <= nr < height and 0 <= nc < width:
+                        if not visited[nr][nc] and grid[nr][nc]['code'] == code:
+                            visited[nr][nc] = True
+                            queue.append((nr, nc))
+            regions.append({'code': code, 'cells': region_cells})
+
+    # 第二步：清理小区域
+    new_grid = [row[:] for row in grid]
+    for region in regions:
+        if len(region['cells']) >= min_area:
+            continue  # 大面积区域保留
+
+        # 小区域：收集周围所有邻居的颜色
+        neighbor_codes = []
+        for r, c in region['cells']:
+            for dr, dc in directions_8:
+                nr, nc = r + dr, c + dc
+                if 0 <= nr < height and 0 <= nc < width:
+                    # 只统计不属于本小区域的邻居
+                    if grid[nr][nc]['code'] != region['code']:
+                        neighbor_codes.append(grid[nr][nc]['code'])
+
+        if not neighbor_codes:
+            continue
+
+        # 找到最常见的邻居颜色
+        most_common_code = Counter(neighbor_codes).most_common(1)[0][0]
+
+        # 找到这个颜色的完整信息
+        target = None
+        for r in range(height):
+            for c in range(width):
+                if grid[r][c]['code'] == most_common_code:
+                    target = grid[r][c]
+                    break
+            if target:
+                break
+
+        if target:
+            for r, c in region['cells']:
+                new_grid[r][c] = {
+                    'code': target['code'],
+                    'name': target['name'],
+                    'rgb': target['rgb'],
+                    'original_rgb': grid[r][c]['original_rgb']
+                }
+
+    return new_grid
 
 
 def pixelate_image(image_path, grid_width, grid_height, brand='mard',
@@ -281,10 +369,18 @@ def pixelate_image(image_path, grid_width, grid_height, brand='mard',
                     }
                 color_count[key]['count'] += 1
 
-    # 边缘强化：清理过渡色孤岛，让轮廓更清晰
+    # 边缘强化：先投票清理孤岛，再基于连通区域大小消灭过渡色带
     if edge_enhance and edge_enhance > 0:
-        iterations = min(int(edge_enhance), 5)
-        grid = edge_enhance_grid(grid, grid_width, grid_height, iterations=iterations)
+        level = min(int(edge_enhance), 5)
+        # 第1步：8邻域投票清理（迭代1~3次）
+        vote_iter = min(level + 1, 3)
+        grid = edge_enhance_grid(grid, grid_width, grid_height, iterations=vote_iter)
+
+        # 第2步：连通区域清理（level >= 3 时启用，专门消灭细线灰色带）
+        if level >= 3:
+            min_area = max(6 - level, 2)  # level3→3, level4→2, level5→2
+            grid = outline_cleanup_grid(grid, grid_width, grid_height, min_area=min_area)
+
         # 强化后需要重新统计颜色
         color_count = {}
         for row in range(grid_height):
