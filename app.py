@@ -125,8 +125,9 @@ def edge_enhance_grid(grid, width, height, iterations=2):
                     continue
 
                 # 如果当前颜色在邻居中已占多数，不是过渡色，保留
+                # threshold 放宽到 2：只清理真正的孤岛（0~1个邻居），保护细线条
                 same_count = sum(1 for n in neighbors if n['code'] == current['code'])
-                if same_count >= 3:
+                if same_count >= 2:
                     continue
 
                 # 找到邻居中最常见的颜色，并继承其完整信息
@@ -177,8 +178,10 @@ def pixelate_image(image_path, grid_width, grid_height, brand='mard',
     elif img.mode != 'RGB':
         img = img.convert('RGB')
 
-    # 线条图模式：边缘锐化 + 硬缩放，从源头减少抗锯齿灰色
+    # 线条图模式：中值滤波去微小色差 + 边缘锐化 + 硬缩放，从源头减少抗锯齿灰色
     if line_art:
+        # 中值滤波：3x3窗口统一相近颜色，消除纯色背景上的微小色差噪点
+        img = img.filter(ImageFilter.MedianFilter(size=3))
         # 边缘锐化，让边界更硬
         img = img.filter(ImageFilter.EDGE_ENHANCE_MORE)
         # NEAREST 硬缩放：不插值，不制造新颜色

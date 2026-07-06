@@ -78,7 +78,7 @@ function bindEvents() {
     // 轮廓清理滑块
     $('edgeEnhance').addEventListener('input', () => {
         const val = $('edgeEnhance').value;
-        const labels = ['0（关闭）', '1（弱清理）', '2（中清理）', '3（强清理+灭灰色带）', '4（很强）', '5（最强）'];
+        const labels = ['0（关闭）', '1（仅清孤岛）', '2（轻去噪）', '3（中去噪）', '4（强去噪）', '5（最强）'];
         $('edgeEnhanceValue').textContent = labels[val] || val;
     });
 
