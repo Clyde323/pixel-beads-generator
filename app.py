@@ -148,6 +148,34 @@ def edge_enhance_grid(grid, width, height, iterations=2):
     return grid
 
 
+def resize_and_pad(img, target_width, target_height, resample=Image.LANCZOS, fill=(255, 255, 255)):
+    """
+    保持原图比例缩放，并居中留白填充到目标尺寸。
+    避免非方形图片被拉伸变形。
+    """
+    img_ratio = img.width / img.height
+    target_ratio = target_width / target_height
+
+    if img_ratio > target_ratio:
+        # 原图更宽，按目标宽度缩放，上下留白
+        new_width = target_width
+        new_height = int(target_width / img_ratio)
+        resized = img.resize((new_width, new_height), resample)
+        result = Image.new('RGB', (target_width, target_height), fill)
+        top = (target_height - new_height) // 2
+        result.paste(resized, (0, top))
+    else:
+        # 原图更高或等比，按目标高度缩放，左右留白
+        new_height = target_height
+        new_width = int(target_height * img_ratio)
+        resized = img.resize((new_width, new_height), resample)
+        result = Image.new('RGB', (target_width, target_height), fill)
+        left = (target_width - new_width) // 2
+        result.paste(resized, (left, 0))
+
+    return result
+
+
 def pixelate_image(image_path, grid_width, grid_height, brand='mard',
                    max_colors=None, tolerance=0, edge_enhance=0, line_art=False):
     """
@@ -185,10 +213,10 @@ def pixelate_image(image_path, grid_width, grid_height, brand='mard',
         # 边缘锐化，让边界更硬
         img = img.filter(ImageFilter.EDGE_ENHANCE_MORE)
         # NEAREST 硬缩放：不插值，不制造新颜色
-        img_resized = img.resize((grid_width, grid_height), Image.NEAREST)
+        img_resized = resize_and_pad(img, grid_width, grid_height, Image.NEAREST)
     else:
         # 默认 LANCZOS 平滑缩放，适合照片
-        img_resized = img.resize((grid_width, grid_height), Image.LANCZOS)
+        img_resized = resize_and_pad(img, grid_width, grid_height, Image.LANCZOS)
 
     pixels = np.array(img_resized)
 
