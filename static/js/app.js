@@ -216,6 +216,7 @@ async function generate() {
     formData.append('brand', 'mard');
     formData.append('tolerance', $('tolerance').value);
     formData.append('edge_enhance', $('edgeEnhance').value);
+    formData.append('line_art', $('lineArt').checked);
     const mc = maxColors.value;
     if (mc) formData.append('max_colors', mc);
 

@@ -105,7 +105,7 @@
                     </select>
                 </div>
                 <div class="form-row">
-                    <label>✨ 轮廓清理 <span class="hint">≥3级开启连通区域清理，消灭灰色过渡带</span></label>
+                    <label>✨ 轮廓清理 <span class="hint">8邻域投票清理边缘过渡色</span></label>
                     <div class="slider-container">
                         <input type="range" id="edgeEnhance" min="0" max="5" value="0" step="1">
                         <div class="slider-labels">
@@ -114,6 +114,9 @@
                             <span>最强</span>
                         </div>
                     </div>
+                </div>
+                <div class="form-row">
+                    <label class="toggle"><input type="checkbox" id="lineArt"> 🎯 线条图模式 <span class="hint">硬边缘缩放+锐化，适合黑白线条/轮廓图</span></label>
                 </div>
             </div>
 
