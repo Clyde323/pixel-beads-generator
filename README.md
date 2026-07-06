@@ -6,6 +6,8 @@
 
 基于 CIE-Lab 色彩空间精准配色 · 支持 MARD 289 色色卡
 
+**[⬇️ 点击下载 Windows 免安装版（双击即用）](https://github.com/Clyde323/pixel-beads-generator/releases/latest)**
+
 [![Python](https://img.shields.io/badge/Python-3.8+-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.x-green?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
