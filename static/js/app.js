@@ -75,6 +75,13 @@ function bindEvents() {
         $('toleranceValue').textContent = $('tolerance').value;
     });
 
+    // 边缘强化滑块
+    $('edgeEnhance').addEventListener('input', () => {
+        const val = $('edgeEnhance').value;
+        const labels = ['0（关闭）', '1（弱）', '2（中）', '3（强）', '4（很强）', '5（最强）'];
+        $('edgeEnhanceValue').textContent = labels[val] || val;
+    });
+
     // 编辑模式开关
     $('editMode').addEventListener('change', e => {
         editMode = e.target.checked;
@@ -208,6 +215,7 @@ async function generate() {
     formData.append('grid_size', Math.max(totalW, totalH));
     formData.append('brand', 'mard');
     formData.append('tolerance', $('tolerance').value);
+    formData.append('edge_enhance', $('edgeEnhance').value);
     const mc = maxColors.value;
     if (mc) formData.append('max_colors', mc);
 

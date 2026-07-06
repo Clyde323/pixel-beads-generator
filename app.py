@@ -93,8 +93,57 @@ def find_nearest_color(pixel_rgb, color_list_lab):
     return nearest
 
 
+from collections import Counter
+
+def edge_enhance_grid(grid, width, height, iterations=2):
+    """
+    边缘强化：投票清理边缘过渡色孤岛
+
+    原理：遍历每个格子，统计4邻域颜色分布。
+    如果当前颜色在邻居中是少数派（出现<2次），
+    说明它是过渡色/噪点，替换为邻居中的主体颜色。
+    迭代多次可清理多层边缘过渡。
+    """
+    for _ in range(iterations):
+        new_grid = [row[:] for row in grid]
+        for row in range(height):
+            for col in range(width):
+                current = grid[row][col]
+                # 收集4邻域邻居
+                neighbors = []
+                for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    nr, nc = row + dr, col + dc
+                    if 0 <= nr < height and 0 <= nc < width:
+                        neighbors.append(grid[nr][nc])
+
+                if not neighbors:
+                    continue
+
+                # 如果当前颜色在邻居中已占多数，不是过渡色，保留
+                same_count = sum(1 for n in neighbors if n['code'] == current['code'])
+                if same_count >= 2:
+                    continue
+
+                # 找到邻居中最常见的颜色，并继承其完整信息
+                codes = [n['code'] for n in neighbors]
+                most_common_code = Counter(codes).most_common(1)[0][0]
+                for n in neighbors:
+                    if n['code'] == most_common_code:
+                        new_grid[row][col] = {
+                            'code': n['code'],
+                            'name': n['name'],
+                            'rgb': n['rgb'],
+                            'original_rgb': current['original_rgb']
+                        }
+                        break
+
+        grid = new_grid
+
+    return grid
+
+
 def pixelate_image(image_path, grid_width, grid_height, brand='mard',
-                   max_colors=None, tolerance=0):
+                   max_colors=None, tolerance=0, edge_enhance=0):
     """
     图片像素化并映射到拼豆色卡
 
@@ -232,6 +281,25 @@ def pixelate_image(image_path, grid_width, grid_height, brand='mard',
                     }
                 color_count[key]['count'] += 1
 
+    # 边缘强化：清理过渡色孤岛，让轮廓更清晰
+    if edge_enhance and edge_enhance > 0:
+        iterations = min(int(edge_enhance), 5)
+        grid = edge_enhance_grid(grid, grid_width, grid_height, iterations=iterations)
+        # 强化后需要重新统计颜色
+        color_count = {}
+        for row in range(grid_height):
+            for col in range(grid_width):
+                cell = grid[row][col]
+                key = cell['code']
+                if key not in color_count:
+                    color_count[key] = {
+                        'code': cell['code'],
+                        'name': cell['name'],
+                        'rgb': cell['rgb'],
+                        'count': 0
+                    }
+                color_count[key]['count'] += 1
+
     color_stats = sorted(color_count.values(), key=lambda x: -x['count'])
     total_beads = grid_width * grid_height
 
@@ -280,6 +348,7 @@ def upload_image():
     if max_colors:
         max_colors = int(max_colors)
     tolerance = int(request.form.get('tolerance', 15))
+    edge_enhance = int(request.form.get('edge_enhance', 0))
 
     filename = f"{uuid.uuid4().hex}.png"
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
@@ -287,7 +356,7 @@ def upload_image():
 
     try:
         result = pixelate_image(filepath, grid_size, grid_size, brand,
-                                max_colors, tolerance)
+                                max_colors, tolerance, edge_enhance)
         result['image_id'] = filename
         return jsonify(result)
     except Exception as e:
