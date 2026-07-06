@@ -9,6 +9,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.x-green?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+[![Release](https://img.shields.io/badge/下载-Windows%E5%85%8D%E5%AE%89%E8%A3%85%E7%89%88-brightgreen)](https://github.com/Clyde323/pixel-beads-generator/releases/latest)
 
 </div>
 
@@ -42,6 +43,7 @@
 | 🔄 批量替换 | 一键将某个颜色全部替换为指定颜色 |
 | 🔍 缩放查看 | 缩放滑块 25%~500% |
 | 📥 导出 PNG | 可调分辨率、字体大小、包含内容 |
+| 💻 零环境运行 | 提供 Windows 免安装 exe，双击即用 |
 
 ## 📸 效果展示
 
@@ -58,7 +60,21 @@
 
 ## 🚀 快速开始
 
-### 方式一：一键启动（推荐）
+### ✅ 方式零：直接下载 Windows 免安装版（强烈推荐，小白首选）
+
+**不需要装 Python，不需要配环境，双击就能用！**
+
+1. 点击右侧 **[Releases](https://github.com/Clyde323/pixel-beads-generator/releases/latest)** 进入下载页面
+2. 下载 `拼豆图纸生成器.exe`
+3. **双击运行**，等待浏览器自动打开（约 2~3 秒）
+4. 上传图片 → 调参数 → 生成 → 导出 PNG
+
+> 💡 **为什么推荐这个方式？**
+> - 不用安装任何东西
+> - 不用懂代码
+> - 下载完直接双击，和打开普通软件一样简单
+
+### 方式一：一键启动（适合有 Python 环境的用户）
 
 **Windows 用户：** 双击运行 `start.bat`
 
@@ -70,7 +86,7 @@ chmod +x start.sh
 
 脚本会自动检查依赖、安装缺失库、启动服务并打开浏览器。
 
-### 方式二：手动启动
+### 方式二：手动启动（开发者）
 
 ```bash
 # 克隆项目
@@ -158,6 +174,8 @@ pixel-beads-generator/
 ### v1.1.0
 - ✅ 新增**线条图模式**：中值滤波 + NEAREST 硬边缘缩放，黑白轮廓图专用，解决抗锯齿灰色杂色问题
 - ✅ 新增**轮廓清理**：8邻域投票清理孤岛过渡色，阈值温和，保留 2×2 细线条
+- ✅ 非方形图片改为**保持比例+白边填充**，避免拉伸变形
+- ✅ 提供 **Windows 免安装 exe 版本**，双击即用，无需 Python 环境
 - ✅ CIE-Lab 颜色匹配算法优化，容差合并更稳定
 
 ### v1.0.0
